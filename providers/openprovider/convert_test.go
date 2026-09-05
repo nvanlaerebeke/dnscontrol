@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/DNSControl/dnscontrol/v4/models"
+	"github.com/DNSControl/dnscontrol/v5/models"
 )
 
 const testOrigin = "example.com"
@@ -99,8 +99,8 @@ func TestRecordRoundTrip(t *testing.T) {
 			if err != nil {
 				t.Fatalf("toRecordConfig: %v", err)
 			}
-			if rc.GetLabel() != tt.wantLabel || rc.GetTargetField() != tt.wantTarget || rc.TTL != uint32(tt.stored.TTL) {
-				t.Errorf("record label=%q target=%q ttl=%d", rc.GetLabel(), rc.GetTargetField(), rc.TTL)
+			if rc.GetLabel() != tt.wantLabel || recordTarget(rc) != tt.wantTarget || rc.TTL != uint32(tt.stored.TTL) {
+				t.Errorf("record label=%q target=%q ttl=%d", rc.GetLabel(), recordTarget(rc), rc.TTL)
 			}
 			if rc.Original != tt.stored {
 				t.Errorf("original record was not preserved: %#v", rc.Original)
@@ -112,6 +112,16 @@ func TestRecordRoundTrip(t *testing.T) {
 			}
 		})
 	}
+}
+
+func recordTarget(rc *models.RecordConfig) string {
+	if rc.Type == "SPF" {
+		return rc.GetTargetTXTJoined()
+	}
+	if rc.Type == "TLSA" {
+		return strings.ToLower(rc.AsTLSA().Certificate)
+	}
+	return rc.GetTargetField()
 }
 
 func TestRelativeHostnameTarget(t *testing.T) {
@@ -163,10 +173,10 @@ func TestNormalizeTTLs(t *testing.T) {
 
 func makeRecord(t *testing.T, rtype, label, value string) *models.RecordConfig {
 	t.Helper()
-	rc := &models.RecordConfig{Type: rtype, TTL: minimumTTL}
-	rc.SetLabel(label, testOrigin)
-	if err := rc.PopulateFromString(rtype, value, testOrigin); err != nil {
-		t.Fatalf("PopulateFromString: %v", err)
+	dc := &models.DomainConfig{Name: testOrigin}
+	rc, err := dc.NewRecordConfigParse(label, minimumTTL, rtype, value)
+	if err != nil {
+		t.Fatalf("NewRecordConfigParse: %v", err)
 	}
 	return rc
 }

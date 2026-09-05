@@ -4,46 +4,55 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/DNSControl/dnscontrol/v4/models"
-	"github.com/DNSControl/dnscontrol/v4/pkg/txtutil"
+	dnsv2 "codeberg.org/miekg/dns"
+	"github.com/DNSControl/dnscontrol/v5/models"
+	"github.com/DNSControl/dnscontrol/v5/pkg/txtutil"
 )
 
 const apexLabel = "@"
 
 func toRecordConfig(record apiRecord, origin string) (*models.RecordConfig, error) {
 	rtype := strings.ToUpper(record.Type)
-	rc := &models.RecordConfig{
-		Type:     rtype,
-		TTL:      uint32(record.TTL),
-		Original: record,
+	dc := &models.DomainConfig{Name: origin}
+	label := relativeRecordName(record.Name, origin)
+	if label == "" {
+		label = apexLabel
 	}
-	setRecordLabel(rc, record.Name, origin)
 
 	value := record.Value
+	var rc *models.RecordConfig
 	var err error
 	switch rtype {
 	case "MX":
-		err = rc.SetTargetMX(uint16(record.Prio), absoluteTarget(value, origin))
+		rc, err = dc.NewRecordConfig(label, uint32(record.TTL), dnsv2.TypeMX, uint16(record.Prio), absoluteTarget(value, origin))
 	case "SRV":
 		fields := strings.Fields(value)
 		if len(fields) != 3 {
 			return nil, fmt.Errorf("OPENPROVIDER: SRV record %q has invalid value", record.Name)
 		}
-		err = rc.SetTargetSRVPriorityString(uint16(record.Prio), strings.Join([]string{fields[0], fields[1], absoluteTarget(fields[2], origin)}, " "))
+		var weight, port uint16
+		if _, err := fmt.Sscanf(strings.Join(fields[:2], " "), "%d %d", &weight, &port); err != nil {
+			return nil, fmt.Errorf("OPENPROVIDER: SRV record %q has invalid value: %w", record.Name, err)
+		}
+		rc, err = dc.NewRecordConfig(label, uint32(record.TTL), dnsv2.TypeSRV, uint16(record.Prio), weight, port, absoluteTarget(fields[2], origin))
 	case "TXT", "SPF":
 		var decoded string
 		decoded, err = txtutil.ParseQuoted(value)
 		if err == nil {
-			err = rc.SetTargetTXT(decoded)
+			rc, err = dc.NewRecordConfig(label, uint32(record.TTL), dnsv2.TypeTXT, decoded)
+			if rc != nil && rtype == "SPF" {
+				rc.Type = rtype
+			}
 		}
 	case "CNAME":
-		err = rc.SetTarget(absoluteTarget(value, origin))
+		rc, err = dc.NewRecordConfig(label, uint32(record.TTL), dnsv2.TypeCNAME, absoluteTarget(value, origin))
 	default:
-		err = rc.PopulateFromString(rtype, value, origin)
+		rc, err = dc.NewRecordConfigParse(label, uint32(record.TTL), rtype, value)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("OPENPROVIDER: parse %s record %q: %w", rtype, record.Name, err)
 	}
+	rc.Original = record
 	return rc, nil
 }
 
@@ -58,27 +67,27 @@ func fromRecordConfig(rc *models.RecordConfig) apiRecord {
 
 	switch rc.Type {
 	case "MX":
-		record.Prio = int(rc.MxPreference)
-		record.Value = strings.TrimSuffix(rc.GetTargetField(), ".")
+		mx := rc.AsMX()
+		record.Prio = int(mx.Preference)
+		record.Value = strings.TrimSuffix(mx.Mx, ".")
 	case "SRV":
-		record.Prio = int(rc.SrvPriority)
-		record.Value = fmt.Sprintf("%d %d %s", rc.SrvWeight, rc.SrvPort, strings.TrimSuffix(rc.GetTargetField(), "."))
+		srv := rc.AsSRV()
+		record.Prio = int(srv.Priority)
+		record.Value = fmt.Sprintf("%d %d %s", srv.Weight, srv.Port, strings.TrimSuffix(srv.Target, "."))
 	case "TXT", "SPF":
 		record.Value = txtutil.EncodeQuoted(rc.GetTargetTXTJoined())
 	case "CNAME":
-		record.Value = strings.TrimSuffix(rc.GetTargetField(), ".")
+		record.Value = strings.TrimSuffix(rc.AsCNAME().Target, ".")
 	case "CAA":
-		record.Value = fmt.Sprintf("%d %s %q", rc.CaaFlag, rc.CaaTag, rc.GetTargetField())
+		caa := rc.AsCAA()
+		record.Value = fmt.Sprintf("%d %s %q", caa.Flag, caa.Tag, caa.Value)
 	case "TLSA":
-		record.Value = fmt.Sprintf("%d %d %d %s", rc.TlsaUsage, rc.TlsaSelector, rc.TlsaMatchingType, rc.GetTargetField())
+		tlsa := rc.AsTLSA()
+		record.Value = fmt.Sprintf("%d %d %d %s", tlsa.Usage, tlsa.Selector, tlsa.MatchingType, strings.ToLower(tlsa.Certificate))
 	default:
 		record.Value = rc.GetTargetField()
 	}
 	return record
-}
-
-func setRecordLabel(rc *models.RecordConfig, name, origin string) {
-	rc.SetLabel(relativeRecordName(name, origin), origin)
 }
 
 func absoluteTarget(target, origin string) string {

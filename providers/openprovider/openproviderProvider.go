@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/DNSControl/dnscontrol/v4/pkg/providers"
+	"github.com/DNSControl/dnscontrol/v5/pkg/providers"
 )
 
 const minimumTTL = uint32(900)
@@ -42,7 +42,7 @@ type openproviderProvider struct {
 
 func init() {
 	const providerName = "OPENPROVIDER"
-	const providerMaintainer = "NEEDS VOLUNTEER"
+	const providerMaintainer = "@nvanlaerebeke"
 	fns := providers.DspFuncs{
 		Initializer:   newOpenProvider,
 		RecordAuditor: AuditRecords,

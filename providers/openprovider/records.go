@@ -5,9 +5,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/DNSControl/dnscontrol/v4/models"
-	"github.com/DNSControl/dnscontrol/v4/pkg/diff2"
-	"github.com/DNSControl/dnscontrol/v4/pkg/printer"
+	"github.com/DNSControl/dnscontrol/v5/models"
+	"github.com/DNSControl/dnscontrol/v5/pkg/diff2"
+	"github.com/DNSControl/dnscontrol/v5/pkg/printer"
 )
 
 var acceptedTTLs = [...]uint32{900, 3600, 10800, 21600, 43200, 86400}
@@ -150,9 +150,9 @@ func filterApexNS(dc *models.DomainConfig) {
 	kept := make([]*models.RecordConfig, 0, len(dc.Records))
 	for _, record := range dc.Records {
 		if record.Type == "NS" && record.GetLabel() == apexLabel {
-			target := strings.TrimSuffix(record.GetTargetField(), ".")
+			target := strings.TrimSuffix(record.AsNS().Ns, ".")
 			if _, ok := declared[target]; !ok {
-				printer.Warnf("OpenProvider does not support changing apex NS records. %s will not be added.\n", record.GetTargetField())
+				printer.Warnf("OpenProvider does not support changing apex NS records. %s will not be added.\n", record.AsNS().Ns)
 			}
 			continue
 		}

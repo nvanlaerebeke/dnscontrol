@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/DNSControl/dnscontrol/v4/models"
+	"github.com/DNSControl/dnscontrol/v5/models"
 )
 
 func TestGetZoneRecordsAndNameservers(t *testing.T) {
@@ -276,9 +276,8 @@ func TestEnsureZoneExists(t *testing.T) {
 		t.Fatalf("existing zone was created again: %#v", created)
 	}
 
-	record := &models.RecordConfig{Type: "A", TTL: 300}
-	record.SetLabel("www", "new.example")
-	record.MustSetTarget("192.0.2.1")
+	dc := &models.DomainConfig{Name: "new.example"}
+	record := dc.MustNewRecordConfig("www", 300, "A", "192.0.2.1")
 	if err := provider.EnsureZoneExists(&models.DomainConfig{Name: "new.example", Records: models.Records{record}}); err != nil {
 		t.Fatalf("new zone: %v", err)
 	}
