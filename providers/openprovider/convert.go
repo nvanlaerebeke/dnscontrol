@@ -36,13 +36,12 @@ func toRecordConfig(record apiRecord, origin string) (*models.RecordConfig, erro
 		}
 		rc, err = dc.NewRecordConfig(label, uint32(record.TTL), dnsv2.TypeSRV, uint16(record.Prio), weight, port, absoluteTarget(fields[2], origin))
 	case "TXT", "SPF":
+		// SPF (RR99) is a legacy API type. DNSControl represents it as TXT,
+		// which is also the form users can declare in dnsconfig.js.
 		var decoded string
 		decoded, err = txtutil.ParseQuoted(value)
 		if err == nil {
 			rc, err = dc.NewRecordConfig(label, uint32(record.TTL), dnsv2.TypeTXT, decoded)
-			if rc != nil && rtype == "SPF" {
-				rc.Type = rtype
-			}
 		}
 	case "CNAME":
 		rc, err = dc.NewRecordConfig(label, uint32(record.TTL), dnsv2.TypeCNAME, absoluteTarget(value, origin))
@@ -74,7 +73,7 @@ func fromRecordConfig(rc *models.RecordConfig) apiRecord {
 		srv := rc.AsSRV()
 		record.Prio = int(srv.Priority)
 		record.Value = fmt.Sprintf("%d %d %s", srv.Weight, srv.Port, strings.TrimSuffix(srv.Target, "."))
-	case "TXT", "SPF":
+	case "TXT":
 		record.Value = txtutil.EncodeQuoted(rc.GetTargetTXTJoined())
 	case "CNAME":
 		record.Value = strings.TrimSuffix(rc.AsCNAME().Target, ".")

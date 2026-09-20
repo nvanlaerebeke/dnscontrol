@@ -17,7 +17,7 @@ var features = providers.DocumentationNotes{
 	providers.CanUseCAA:              providers.Can(),
 	providers.CanUseDHCID:            providers.Cannot(),
 	providers.CanUseDNAME:            providers.Cannot(),
-	providers.CanUseDNSKEY:           providers.Cannot("DNSSEC keys are managed by OpenProvider"),
+	providers.CanUseDNSKEY:           providers.Cannot("DNSSEC keys are managed by Openprovider"),
 	providers.CanUseDS:               providers.Cannot(),
 	providers.CanUseHTTPS:            providers.Cannot(),
 	providers.CanUseLOC:              providers.Cannot(),
@@ -26,13 +26,13 @@ var features = providers.DocumentationNotes{
 	providers.CanUsePTR:              providers.Cannot(),
 	providers.CanUseRP:               providers.Cannot(),
 	providers.CanUseSMIMEA:           providers.Cannot(),
-	providers.CanUseSOA:              providers.Cannot("The SOA record is managed by OpenProvider"),
+	providers.CanUseSOA:              providers.Cannot("The SOA record is managed by Openprovider"),
 	providers.CanUseSRV:              providers.Can(),
 	providers.CanUseSSHFP:            providers.Cannot(),
 	providers.CanUseSVCB:             providers.Cannot(),
 	providers.CanUseTLSA:             providers.Can(),
 	providers.DocCreateDomains:       providers.Can(),
-	providers.DocDualHost:            providers.Cannot("OpenProvider manages the authoritative NS records"),
+	providers.DocDualHost:            providers.Cannot("Openprovider manages the authoritative NS records"),
 	providers.DocOfficiallySupported: providers.Cannot(),
 }
 
@@ -51,7 +51,7 @@ func init() {
 	providers.RegisterMaintainer(providerName, providerMaintainer)
 	providers.RegisterDefaultTTL(providerName, minimumTTL)
 	providers.RegisterCredsMetadata(providerName, providers.CredsMetadata{
-		DisplayName: "OpenProvider",
+		DisplayName: "Openprovider",
 		Kind:        providers.KindDNS,
 		DocsURL:     "https://docs.dnscontrol.org/provider/openprovider",
 		PortalURL:   "https://cp.openprovider.eu/",
@@ -61,7 +61,7 @@ func init() {
 			{
 				Key:     "api_url",
 				Label:   "API base URL",
-				Help:    "Only needed for a non-production OpenProvider environment.",
+				Help:    "Only needed for a non-production Openprovider environment.",
 				Default: defaultAPIURL,
 			},
 		},

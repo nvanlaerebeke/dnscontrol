@@ -16,7 +16,6 @@ var supportedRecordTypes = []string{
 	"CNAME",
 	"MX",
 	"NS",
-	"SPF",
 	"SRV",
 	"TLSA",
 	"TXT",
@@ -24,7 +23,7 @@ var supportedRecordTypes = []string{
 
 var supportedCAATags = []string{"issue", "issuewild", "iodef"}
 
-// AuditRecords returns errors for records that OpenProvider cannot represent.
+// AuditRecords returns errors for records that Openprovider cannot represent.
 func AuditRecords(records models.Records) []error {
 	auditor := rejectif.Auditor{}
 	auditor.TypesSupported(supportedRecordTypes)
@@ -42,28 +41,28 @@ func AuditRecords(records models.Records) []error {
 
 func rejectUnsupportedNS(rc *models.RecordConfig) error {
 	if rc.GetLabel() != apexLabel {
-		return fmt.Errorf("NS records are only supported at the OpenProvider zone apex")
+		return fmt.Errorf("NS records are only supported at the Openprovider zone apex")
 	}
 	return nil
 }
 
 func rejectUnsupportedCAAFlag(rc *models.RecordConfig) error {
 	if rc.AsCAA().Flag != 0 {
-		return fmt.Errorf("CAA flag %d is not supported by OpenProvider", rc.AsCAA().Flag)
+		return fmt.Errorf("CAA flag %d is not supported by Openprovider", rc.AsCAA().Flag)
 	}
 	return nil
 }
 
 func rejectUnsupportedCAATag(rc *models.RecordConfig) error {
 	if !slices.Contains(supportedCAATags, rc.AsCAA().Tag) {
-		return fmt.Errorf("CAA tag %q is not supported by OpenProvider", rc.AsCAA().Tag)
+		return fmt.Errorf("CAA tag %q is not supported by Openprovider", rc.AsCAA().Tag)
 	}
 	return nil
 }
 
 func rejectUnsupportedCAAFields(rc *models.RecordConfig) error {
 	if strings.Contains(rc.AsCAA().Value, ";") {
-		return fmt.Errorf("CAA target fields are not supported by OpenProvider")
+		return fmt.Errorf("CAA target fields are not supported by Openprovider")
 	}
 	return nil
 }

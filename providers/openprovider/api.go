@@ -28,7 +28,7 @@ type apiError struct {
 }
 
 func (e *apiError) Error() string {
-	details := "OpenProvider API error"
+	details := "Openprovider API error"
 	if e.Code != 0 {
 		details += fmt.Sprintf(" code %d", e.Code)
 	}

@@ -173,7 +173,7 @@
 * [Netnod](provider/netnod.md)
 * [NexDNS](provider/nexdns.md)
 * [NS1](provider/ns1.md)
-* [OpenProvider](provider/openprovider.md)
+* [Openprovider](provider/openprovider.md)
 * [OpenSRS](provider/opensrs.md)
 * [OpenWrt](provider/openwrt.md)
 * [Oracle Cloud](provider/oracle.md)

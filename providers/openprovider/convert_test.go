@@ -107,8 +107,17 @@ func TestRecordRoundTrip(t *testing.T) {
 			}
 
 			request := fromRecordConfig(rc)
-			if request.Name != relativeName(tt.wantLabel) || request.Type != tt.stored.Type || request.TTL != tt.stored.TTL || request.Value != tt.wantValue || request.Prio != tt.wantPriority {
+			wantType := tt.stored.Type
+			if wantType == "SPF" {
+				// Openprovider's legacy SPF records are represented as TXT in
+				// DNSControl because RR99 is deprecated.
+				wantType = "TXT"
+			}
+			if request.Name != relativeName(tt.wantLabel) || request.Type != wantType || request.TTL != tt.stored.TTL || request.Value != tt.wantValue || request.Prio != tt.wantPriority {
 				t.Errorf("request = %#v", request)
+			}
+			if tt.stored.Type == "SPF" && rc.Type != "TXT" {
+				t.Errorf("legacy SPF record type = %q, want TXT", rc.Type)
 			}
 		})
 	}
@@ -151,6 +160,10 @@ func TestAuditRecords(t *testing.T) {
 	}
 	if errors := AuditRecords(models.Records{validApexNS}); len(errors) != 0 {
 		t.Errorf("valid apex NS errors = %v", errors)
+	}
+	legacySPF := makeRecord(t, "SPF", "@", `"v=spf1 -all"`)
+	if errors := AuditRecords(models.Records{legacySPF}); len(errors) != 1 {
+		t.Errorf("legacy SPF errors = %v", errors)
 	}
 	if errors := AuditRecords(models.Records{unsupported}); len(errors) != 1 {
 		t.Errorf("unsupported record errors = %v", errors)

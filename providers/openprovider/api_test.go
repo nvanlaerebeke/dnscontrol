@@ -27,7 +27,7 @@ func TestAPITokenReuse(t *testing.T) {
 		case "/dns/zones/example.com":
 			zoneCalls++
 			if r.URL.Query().Get("provider") != "openprovider" {
-				t.Error("zone lookup did not select the standard OpenProvider DNS service")
+				t.Error("zone lookup did not select the standard Openprovider DNS service")
 			}
 			if r.Header.Get("Authorization") != "Bearer token-one" {
 				t.Error("zone request did not reuse the authenticated token")
@@ -129,7 +129,7 @@ func TestListZonesPagination(t *testing.T) {
 		}
 		offsets = append(offsets, r.URL.Query().Get("offset"))
 		if r.URL.Query().Get("provider") != "openprovider" {
-			t.Error("zone listing did not select the standard OpenProvider DNS service")
+			t.Error("zone listing did not select the standard Openprovider DNS service")
 		}
 		start := 0
 		count := pageSize

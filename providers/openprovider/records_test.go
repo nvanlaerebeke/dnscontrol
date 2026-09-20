@@ -18,13 +18,14 @@ func TestGetZoneRecordsAndNameservers(t *testing.T) {
 			writeJSON(t, w, http.StatusOK, `{"code":0,"data":{"id":42,"name":"example.com"},"desc":""}`)
 		case "/dns/zones/example.com/records":
 			if r.URL.Query().Get("zone_provider") != "openprovider" {
-				t.Error("record listing did not select the standard OpenProvider DNS service")
+				t.Error("record listing did not select the standard Openprovider DNS service")
 			}
-			writeJSON(t, w, http.StatusOK, `{"code":0,"data":{"total":5,"results":[
+			writeJSON(t, w, http.StatusOK, `{"code":0,"data":{"total":6,"results":[
 				{"name":"","type":"SOA","value":"ns1.openprovider.nl. hostmaster.example.com. 1 2 3 4 5","ttl":86400},
 				{"name":"","type":"NS","value":"ns2.openprovider.be.","ttl":86400},
 				{"name":"example.com","type":"NS","value":"ns1.openprovider.nl.","ttl":86400},
 				{"name":"example.com.","type":"NS","value":"ns3.openprovider.eu.","ttl":86400},
+				{"name":"example.com","type":"SPF","value":"\"v=spf1 -all\"","ttl":600},
 				{"name":"www","type":"A","value":"192.0.2.10","ttl":600}
 			]},"desc":""}`)
 		default:
@@ -38,7 +39,7 @@ func TestGetZoneRecordsAndNameservers(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetZoneRecords: %v", err)
 	}
-	if len(records) != 1 || records[0].Type != "A" || records[0].GetLabel() != "www" {
+	if len(records) != 2 || records[0].Type != "TXT" || records[0].GetLabel() != "@" || records[0].GetTargetTXTJoined() != "v=spf1 -all" || records[1].Type != "A" || records[1].GetLabel() != "www" {
 		t.Fatalf("records = %#v", records)
 	}
 
@@ -72,6 +73,14 @@ func TestCorrectionPayloads(t *testing.T) {
 			wantAction:  "add",
 			wantRecords: 1,
 			wantCount:   1,
+		},
+		{
+			name: "legacy SPF matches TXT",
+			existing: models.Records{mustNativeRecord(t, apiRecord{
+				Name: "example.com", Type: "SPF", Value: `"v=spf1 -all"`, TTL: int(minimumTTL),
+			})},
+			desired:   models.Records{makeRecord(t, "TXT", "@", "v=spf1 -all")},
+			wantCount: 0,
 		},
 		{
 			name: "add record while changing existing TTL",

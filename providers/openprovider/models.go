@@ -48,8 +48,8 @@ type createZoneRequest struct {
 	Secured              bool        `json:"secured"`
 }
 
-// apiRecord is both the record shape returned by OpenProvider and the shape
-// accepted by the zone update endpoint. OpenProvider identifies a record by
+// apiRecord is both the record shape returned by Openprovider and the shape
+// accepted by the zone update endpoint. Openprovider identifies a record by
 // its complete contents rather than by a stable record ID.
 type apiRecord struct {
 	Name  string `json:"name,omitempty"`
@@ -61,7 +61,7 @@ type apiRecord struct {
 
 // MarshalJSON keeps priority zero for record types that use the priority
 // field. In particular, priority zero is valid for MX records and is required
-// by OpenProvider's API; omitempty would otherwise drop it.
+// by Openprovider's API; omitempty would otherwise drop it.
 func (r apiRecord) MarshalJSON() ([]byte, error) {
 	var prio *int
 	if strings.EqualFold(r.Type, "MX") || strings.EqualFold(r.Type, "SRV") {

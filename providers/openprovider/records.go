@@ -12,7 +12,7 @@ import (
 
 var acceptedTTLs = [...]uint32{900, 3600, 10800, 21600, 43200, 86400}
 
-// GetZoneRecords returns the records in an OpenProvider zone. Provider-managed
+// GetZoneRecords returns the records in an Openprovider zone. Provider-managed
 // SOA and NS records are omitted because the API will not mutate them.
 func (p *openproviderProvider) GetZoneRecords(dc *models.DomainConfig) (models.Records, error) {
 	zone, err := p.client.getZone(dc.Name)
@@ -38,7 +38,7 @@ func (p *openproviderProvider) GetZoneRecords(dc *models.DomainConfig) (models.R
 	return records, nil
 }
 
-// GetZoneRecordsCorrections computes individual OpenProvider record mutations.
+// GetZoneRecordsCorrections computes individual Openprovider record mutations.
 func (p *openproviderProvider) GetZoneRecordsCorrections(dc *models.DomainConfig, existing models.Records) ([]*models.Correction, int, error) {
 	zone, err := p.client.getZone(dc.Name)
 	if err != nil {
@@ -48,7 +48,7 @@ func (p *openproviderProvider) GetZoneRecordsCorrections(dc *models.DomainConfig
 	filterApexNS(desired)
 	normalizeTTLs(desired.Records)
 
-	// OpenProvider's update endpoint accepts individual record operations. Using
+	// Openprovider's update endpoint accepts individual record operations. Using
 	// ByRecord is important here: ByRecordSet can contain several old and new
 	// records, and pairing those slices by position can update or remove the
 	// wrong record when a set is changed.
@@ -96,7 +96,7 @@ func (p *openproviderProvider) GetZoneRecordsCorrections(dc *models.DomainConfig
 }
 
 // updateZoneRecords sends one record modifier per request. Although the
-// request shape contains arrays, OpenProvider processes only one item from a
+// request shape contains arrays, Openprovider processes only one item from a
 // modifier reliably. Sending each operation separately is also necessary for
 // multiple TXT records at the same owner name.
 func (c *apiClient) updateZoneRecords(zone apiZone, updates recordUpdates) error {
@@ -119,7 +119,7 @@ func (c *apiClient) updateZoneRecords(zone apiZone, updates recordUpdates) error
 }
 
 // normalizeAPIRecordName converts the fully-qualified owner names returned by
-// OpenProvider into the relative names required by its zone modifier API.
+// Openprovider into the relative names required by its zone modifier API.
 func normalizeAPIRecordName(record apiRecord, origin string) apiRecord {
 	record.Name = relativeRecordName(record.Name, origin)
 	return record
@@ -140,7 +140,7 @@ func relativeRecordName(name, origin string) string {
 
 // filterApexNS removes provider-managed apex NS records from the desired
 // state. DNSControl injects the authoritative nameservers into every desired
-// zone, but OpenProvider owns those records and does not accept their updates.
+// zone, but Openprovider owns those records and does not accept their updates.
 func filterApexNS(dc *models.DomainConfig) {
 	declared := make(map[string]struct{}, len(dc.Nameservers))
 	for _, ns := range dc.Nameservers {
@@ -152,7 +152,7 @@ func filterApexNS(dc *models.DomainConfig) {
 		if record.Type == "NS" && record.GetLabel() == apexLabel {
 			target := strings.TrimSuffix(record.AsNS().Ns, ".")
 			if _, ok := declared[target]; !ok {
-				printer.Warnf("OpenProvider does not support changing apex NS records. %s will not be added.\n", record.AsNS().Ns)
+				printer.Warnf("Openprovider does not support changing apex NS records. %s will not be added.\n", record.AsNS().Ns)
 			}
 			continue
 		}
@@ -171,7 +171,7 @@ func normalizeTTLs(records models.Records) {
 		if record.TTL == normalized {
 			continue
 		}
-		printer.Warnf("OpenProvider only accepts TTLs of 900, 3600, 10800, 21600, 43200, or 86400 seconds. Setting %s %s from %d to %d.\n", record.GetLabelFQDN(), record.Type, record.TTL, normalized)
+		printer.Warnf("Openprovider only accepts TTLs of 900, 3600, 10800, 21600, 43200, or 86400 seconds. Setting %s %s from %d to %d.\n", record.GetLabelFQDN(), record.Type, record.TTL, normalized)
 		record.TTL = normalized
 	}
 }
@@ -200,13 +200,13 @@ func providerDomainConfig(dc *models.DomainConfig) *models.DomainConfig {
 	}
 	desired.Records = make(models.Records, len(dc.Records))
 	for i, record := range dc.Records {
-		copy := *record
-		desired.Records[i] = &copy
+		clone := *record
+		desired.Records[i] = &clone
 	}
 	return desired
 }
 
-// GetNameservers returns the provider-managed authoritative NS records.
+// GetNameservers returns the Openprovider-managed authoritative NS records.
 func (p *openproviderProvider) GetNameservers(domain string) ([]*models.Nameserver, error) {
 	zone, err := p.client.getZone(domain)
 	if err != nil {
@@ -231,7 +231,7 @@ func (p *openproviderProvider) GetNameservers(domain string) ([]*models.Nameserv
 	return models.ToNameservers(names)
 }
 
-// ListZones returns all DNS zones visible to the OpenProvider account.
+// ListZones returns all DNS zones visible to the Openprovider account.
 func (p *openproviderProvider) ListZones() ([]string, error) {
 	zones, err := p.client.listZones()
 	if err != nil {

@@ -1,7 +1,7 @@
 ## Configuration
 
 To use this provider, add an entry to `creds.json` with `TYPE` set to
-`OPENPROVIDER`, together with the username and password of an OpenProvider
+`OPENPROVIDER`, together with the username and password of an Openprovider
 account that has API access.
 
 {% code title="creds.json" %}
@@ -16,14 +16,14 @@ account that has API access.
 ```
 {% endcode %}
 
-The provider authenticates automatically through OpenProvider's REST login
+The provider authenticates automatically through Openprovider's REST login
 endpoint. It caches the returned bearer token for the DNSControl process and
-authenticates again if OpenProvider rejects an expired token. A bearer token
+authenticates again if Openprovider rejects an expired token. A bearer token
 must not be added to `creds.json`.
 
 The production API defaults to `https://api.openprovider.eu/v1`. The optional
-`api_url` field can select another OpenProvider environment. For example, the
-OpenProvider sandbox currently uses:
+`api_url` field can select another Openprovider environment. For example, the
+Openprovider sandbox currently uses:
 
 ```json
 "api_url": "https://api.sandbox.openprovider.nl/v1beta"
@@ -54,26 +54,27 @@ D("example.com", REG_NONE, DnsProvider(DSP_OPENPROVIDER),
 
 ## Supported record types
 
-The provider supports `A`, `AAAA`, `CAA`, `CNAME`, `MX`, `SPF`, `SRV`, `TLSA`,
-and `TXT` records. OpenProvider represents `SPF` as a distinct record type;
-an SPF policy can also be published as a `TXT` record.
+The provider supports `A`, `AAAA`, `CAA`, `CNAME`, `MX`, `SRV`, `TLSA`, and
+`TXT` records. Openprovider's legacy `SPF` record type (RR99) is deprecated;
+records returned by the API with that type are normalized to `TXT` on read.
+Declare SPF policies as `TXT` records in `dnsconfig.js`.
 
-CAA records are limited to flag `0` and the OpenProvider-documented `issue`,
+CAA records are limited to flag `0` and the Openprovider-documented `issue`,
 `issuewild`, and `iodef` tags.
 
-OpenProvider does not support `ALIAS`/`ANAME`, `DNAME`, `DS`, `DNSKEY`, `HTTPS`,
+Openprovider does not support `ALIAS`/`ANAME`, `DNAME`, `DS`, `DNSKEY`, `HTTPS`,
 `LOC`, `NAPTR`, `PTR`, `SSHFP`, or `SVCB` records through its standard DNS zone
-API. `NS` records are conditionally available through OpenProvider support, but
+API. `NS` records are conditionally available through Openprovider support, but
 DNSControl treats the provider-managed authoritative nameservers as read-only.
 Unsupported or non-manageable types are rejected during DNSControl's record
 audit before a push reaches the API.
 
 ## New domains and get-zones
 
-`dnscontrol get-zones` is supported and uses the paginated OpenProvider zone and
+`dnscontrol get-zones` is supported and uses the paginated Openprovider zone and
 record APIs.
 
-DNSControl can create a missing standard master zone. OpenProvider requires a
+DNSControl can create a missing standard master zone. Openprovider requires a
 new master zone to contain at least one record, so the domain configuration must
 not be empty on its first push. Zone creation only provisions DNS hosting; it
 does not register, transfer, renew, delegate, or otherwise modify the domain at
@@ -83,13 +84,13 @@ the registrar.
 
 ### TTLs
 
-OpenProvider's current minimum record TTL is 900 seconds. DNSControl raises a
+Openprovider's current minimum record TTL is 900 seconds. DNSControl raises a
 lower requested TTL to 900 seconds and prints a warning. This normalization is
 applied before reconciliation so the next preview is clean.
 
 ### SOA and NS records
 
-OpenProvider creates and manages the zone's SOA and authoritative apex NS
+Openprovider creates and manages the zone's SOA and authoritative apex NS
 records. DNSControl reads the apex NS records for nameserver discovery but does
 not attempt to add, change, or remove them. It also does not support NS
 delegation records for child labels. The provider omits the managed records
@@ -103,12 +104,12 @@ zone. Dual hosting is not supported because those records cannot be changed.
 
 The API updates individual records. It does not expose stable record IDs, so
 the provider identifies an existing record using the complete record value
-returned by OpenProvider and sends that exact value in update and remove
+returned by Openprovider and sends that exact value in update and remove
 requests.
 
 ### DNSSEC
 
-OpenProvider can manage DNSSEC outside DNSControl, but `AUTODNSSEC_ON` and
+Openprovider can manage DNSSEC outside DNSControl, but `AUTODNSSEC_ON` and
 direct `DNSKEY`/`DS` record management are not implemented by this provider.
 
 ### Concurrent operations
