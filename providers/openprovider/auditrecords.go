@@ -27,15 +27,15 @@ var supportedCAATags = []string{"issue", "issuewild", "iodef"}
 func AuditRecords(records models.Records) []error {
 	auditor := rejectif.Auditor{}
 	auditor.TypesSupported(supportedRecordTypes)
-	auditor.Add("NS", rejectUnsupportedNS)
-	auditor.Add("MX", rejectif.MxNull)
-	auditor.Add("SRV", rejectif.SrvHasNullTarget)
-	auditor.Add("TXT", rejectif.TxtIsEmpty)
-	auditor.Add("TXT", rejectif.TxtHasDoubleQuotes)
-	auditor.Add("TXT", rejectif.TxtHasBackslash)
-	auditor.Add("CAA", rejectUnsupportedCAAFlag)
-	auditor.Add("CAA", rejectUnsupportedCAATag)
-	auditor.Add("CAA", rejectUnsupportedCAAFields)
+	auditor.Add("NS", rejectUnsupportedNS)          // Last verified 2026-09-21
+	auditor.Add("MX", rejectif.MxNull)              // Last verified 2026-09-21
+	auditor.Add("SRV", rejectif.SrvHasNullTarget)   // Last verified 2026-09-21
+	auditor.Add("TXT", rejectif.TxtIsEmpty)         // Last verified 2026-09-21
+	auditor.Add("TXT", rejectif.TxtHasDoubleQuotes) // Last verified 2026-09-21
+	auditor.Add("TXT", rejectif.TxtHasBackslash)    // Last verified 2026-09-21
+	auditor.Add("CAA", rejectUnsupportedCAAFlag)    // Last verified 2026-09-21
+	auditor.Add("CAA", rejectUnsupportedCAATag)     // Last verified 2026-09-21
+	auditor.Add("CAA", rejectUnsupportedCAAFields)  // Last verified 2026-09-21
 	return auditor.Audit(records)
 }
 
