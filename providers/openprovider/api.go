@@ -198,7 +198,6 @@ func (c *apiClient) getToken() (string, error) {
 	payload, err := json.Marshal(loginRequest{
 		Username: c.username,
 		Password: c.password,
-		IP:       "0.0.0.0",
 	})
 	if err != nil {
 		return "", errors.New("OPENPROVIDER: authenticate: encode request")

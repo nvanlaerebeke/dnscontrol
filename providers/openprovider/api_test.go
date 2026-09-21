@@ -16,12 +16,15 @@ func TestAPITokenReuse(t *testing.T) {
 		switch r.URL.Path {
 		case "/auth/login":
 			authCalls++
-			var request loginRequest
+			var request map[string]string
 			if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 				t.Errorf("decode login request: %v", err)
 			}
-			if request.Username != "test-user" || request.Password != "test-password" || request.IP != "0.0.0.0" {
-				t.Error("login request did not contain the expected credentials and IP selector")
+			if request["username"] != "test-user" || request["password"] != "test-password" {
+				t.Error("login request did not contain the expected credentials")
+			}
+			if _, ok := request["ip"]; ok {
+				t.Error("login request unexpectedly contained an IP selector")
 			}
 			writeJSON(t, w, http.StatusOK, `{"code":0,"data":{"token":"token-one"},"desc":""}`)
 		case "/dns/zones/example.com":

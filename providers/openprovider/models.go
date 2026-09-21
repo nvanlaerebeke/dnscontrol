@@ -14,7 +14,6 @@ type apiEnvelope struct {
 type loginRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
-	IP       string `json:"ip"`
 }
 
 type loginResponse struct {
