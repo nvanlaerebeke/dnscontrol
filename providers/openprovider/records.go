@@ -177,6 +177,8 @@ func normalizeTTLs(records models.Records) {
 }
 
 func normalizeTTL(ttl uint32) uint32 {
+	// Openprovider accepts only these discrete TTLs, so choose the smallest
+	// supported value that is at least as large as the requested TTL.
 	for _, accepted := range acceptedTTLs {
 		if ttl <= accepted {
 			return accepted

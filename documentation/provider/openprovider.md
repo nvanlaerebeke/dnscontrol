@@ -84,9 +84,15 @@ the registrar.
 
 ### TTLs
 
-Openprovider's current minimum record TTL is 900 seconds. DNSControl raises a
-lower requested TTL to 900 seconds and prints a warning. This normalization is
-applied before reconciliation so the next preview is clean.
+[Openprovider's zone modification documentation](https://support.openprovider.eu/hc/en-us/articles/360024342733-3-Zones-API-How-to-modify-a-zone)
+lists the supported TTL values.
+
+Openprovider supports only the following record TTLs, in seconds: `900`,
+`3600`, `10800`, `21600`, `43200`, and `86400`. If a different TTL is given,
+DNSControl normalizes it to the next higher supported value and prints a
+warning. Values above `86400` are capped at `86400`; values below `900` are
+raised to `900`. This normalization is applied before reconciliation so the
+next preview is clean.
 
 ### SOA and NS records
 
