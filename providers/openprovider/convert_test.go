@@ -146,7 +146,7 @@ func TestRelativeHostnameTarget(t *testing.T) {
 
 func TestInvalidSRVValue(t *testing.T) {
 	_, err := toRecordConfig(apiRecord{Name: "_sip._tcp", Type: "SRV", Value: "missing fields", TTL: 600}, &models.DomainConfig{Name: testOrigin})
-	if err == nil || !strings.Contains(err.Error(), "invalid value") {
+	if err == nil || !strings.Contains(err.Error(), "parse SRV record") {
 		t.Fatalf("error = %v", err)
 	}
 }

@@ -6,6 +6,7 @@ import (
 
 	dnsv2 "codeberg.org/miekg/dns"
 	"github.com/DNSControl/dnscontrol/v5/models"
+	"github.com/DNSControl/dnscontrol/v5/pkg/nrc"
 	"github.com/DNSControl/dnscontrol/v5/pkg/txtutil"
 )
 
@@ -26,15 +27,8 @@ func toRecordConfig(record apiRecord, dc *models.DomainConfig) (*models.RecordCo
 	case "MX":
 		rc, err = dc.NewRecordConfig(label, uint32(record.TTL), dnsv2.TypeMX, uint16(record.Prio), absoluteTarget(value, origin))
 	case "SRV":
-		fields := strings.Fields(value)
-		if len(fields) != 3 {
-			return nil, fmt.Errorf("OPENPROVIDER: SRV record %q has invalid value", record.Name)
-		}
-		var weight, port uint16
-		if _, err := fmt.Sscanf(strings.Join(fields[:2], " "), "%d %d", &weight, &port); err != nil {
-			return nil, fmt.Errorf("OPENPROVIDER: SRV record %q has invalid value: %w", record.Name, err)
-		}
-		rc, err = dc.NewRecordConfig(label, uint32(record.TTL), dnsv2.TypeSRV, uint16(record.Prio), weight, port, absoluteTarget(fields[2], origin))
+		rc, err = dc.NewRecordConfig(label, uint32(record.TTL), dnsv2.TypeSRV, uint16(record.Prio), value,
+			nrc.Flags{SrvWeirdSplit: true, TargetIsFqdnNoDot: true})
 	case "TXT", "SPF":
 		// SPF (RR99) is a legacy API type. DNSControl represents it as TXT,
 		// which is also the form users can declare in dnsconfig.js.
