@@ -134,8 +134,8 @@ func recordTarget(rc *models.RecordConfig) string {
 	return rc.GetTargetField()
 }
 
-func TestRelativeHostnameTarget(t *testing.T) {
-	rc, err := toRecordConfig(apiRecord{Name: "alias", Type: "CNAME", Value: "www", TTL: 600}, &models.DomainConfig{Name: testOrigin})
+func TestCNAMEFQDNWithoutTrailingDot(t *testing.T) {
+	rc, err := toRecordConfig(apiRecord{Name: "alias", Type: "CNAME", Value: "www.example.com", TTL: 600}, &models.DomainConfig{Name: testOrigin})
 	if err != nil {
 		t.Fatal(err)
 	}

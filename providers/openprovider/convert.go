@@ -14,7 +14,6 @@ const apexLabel = "@"
 
 func toRecordConfig(record apiRecord, dc *models.DomainConfig) (*models.RecordConfig, error) {
 	rtype := strings.ToUpper(record.Type)
-	origin := dc.Name
 	label := labelFromAPIRecordName(record.Name, dc)
 
 	value := record.Value
@@ -22,7 +21,7 @@ func toRecordConfig(record apiRecord, dc *models.DomainConfig) (*models.RecordCo
 	var err error
 	switch rtype {
 	case "MX":
-		rc, err = dc.NewRecordConfig(dc.LabelFromFQDNWithDot(record.Name), uint32(record.TTL), dnsv2.TypeMX, uint16(record.Prio), value, nrc.Flags{TargetIsFqdnNoDot: true})
+		rc, err = dc.NewRecordConfig(label, uint32(record.TTL), dnsv2.TypeMX, uint16(record.Prio), value, nrc.Flags{TargetIsFqdnNoDot: true})
 	case "SRV":
 		rc, err = dc.NewRecordConfig(label, uint32(record.TTL), dnsv2.TypeSRV, uint16(record.Prio), value,
 			nrc.Flags{SrvWeirdSplit: true, TargetIsFqdnNoDot: true})
@@ -31,7 +30,8 @@ func toRecordConfig(record apiRecord, dc *models.DomainConfig) (*models.RecordCo
 		// which is also the form users can declare in dnsconfig.js.
 		rc, err = dc.NewRecordConfigParse(label, uint32(record.TTL), dnsv2.TypeTXT, value)
 	case "CNAME":
-		rc, err = dc.NewRecordConfig(label, uint32(record.TTL), dnsv2.TypeCNAME, absoluteTarget(value, origin))
+		rc, err = dc.NewRecordConfig(label, uint32(record.TTL), dnsv2.TypeCNAME, value,
+			nrc.Flags{TargetIsFqdnNoDot: true})
 	default:
 		rc, err = dc.NewRecordConfigParse(label, uint32(record.TTL), rtype, value)
 	}
@@ -92,16 +92,6 @@ func fromRecordConfig(rc *models.RecordConfig) apiRecord {
 		record.Value = rc.GetTargetField()
 	}
 	return record
-}
-
-func absoluteTarget(target, origin string) string {
-	if target == "" || target == "." || strings.HasSuffix(target, ".") {
-		return target
-	}
-	if !strings.Contains(target, ".") {
-		return target + "." + origin + "."
-	}
-	return target + "."
 }
 
 func isApexRecordName(name, origin string) bool {
