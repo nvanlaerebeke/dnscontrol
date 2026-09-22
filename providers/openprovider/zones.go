@@ -22,7 +22,10 @@ func (p *openproviderProvider) EnsureZoneExists(dc *models.DomainConfig) error {
 	if err != nil {
 		return err
 	}
-	desired := providerDomainConfig(dc)
+	desired, err := providerDomainConfig(dc)
+	if err != nil {
+		return err
+	}
 	desired.Records = managedZoneRecords(desired.Records)
 	if len(desired.Records) == 0 {
 		return fmt.Errorf("OPENPROVIDER: cannot create DNS zone %q without at least one record", dc.Name)

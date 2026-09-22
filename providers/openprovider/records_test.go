@@ -208,7 +208,12 @@ func TestProviderSpecificNormalizationDoesNotMutateDomainConfig(t *testing.T) {
 	dc := &models.DomainConfig{Name: testOrigin, Records: models.Records{ns, low}}
 
 	originalRecords := append(models.Records(nil), dc.Records...)
-	providerDomainConfig(dc)
+	desired, err := providerDomainConfig(dc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	filterApexNS(desired)
+	normalizeTTLs(desired.Records)
 	if len(dc.Records) != len(originalRecords) || dc.Records[0] != originalRecords[0] || dc.Records[1].TTL != 300 {
 		t.Fatalf("provider-specific copy changed the original domain config: %#v", dc.Records)
 	}

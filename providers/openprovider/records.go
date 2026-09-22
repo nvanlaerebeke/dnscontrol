@@ -44,7 +44,10 @@ func (p *openproviderProvider) GetZoneRecordsCorrections(dc *models.DomainConfig
 	if err != nil {
 		return nil, 0, err
 	}
-	desired := providerDomainConfig(dc)
+	desired, err := providerDomainConfig(dc)
+	if err != nil {
+		return nil, 0, err
+	}
 	filterApexNS(desired)
 	normalizeTTLs(desired.Records)
 
@@ -189,23 +192,8 @@ func normalizeTTL(ttl uint32) uint32 {
 
 // providerDomainConfig prevents provider-specific filtering and TTL
 // normalization from changing the desired state used by other providers.
-func providerDomainConfig(dc *models.DomainConfig) *models.DomainConfig {
-	desired := &models.DomainConfig{
-		Name:              dc.Name,
-		Nameservers:       dc.Nameservers,
-		EnsureAbsent:      dc.EnsureAbsent,
-		KeepUnknown:       dc.KeepUnknown,
-		Unmanaged:         dc.Unmanaged,
-		UnmanagedUnsafe:   dc.UnmanagedUnsafe,
-		IgnoreExternalDNS: dc.IgnoreExternalDNS,
-		ExternalDNSPrefix: dc.ExternalDNSPrefix,
-	}
-	desired.Records = make(models.Records, len(dc.Records))
-	for i, record := range dc.Records {
-		clone := *record
-		desired.Records[i] = &clone
-	}
-	return desired
+func providerDomainConfig(dc *models.DomainConfig) (*models.DomainConfig, error) {
+	return dc.Copy()
 }
 
 // GetNameservers returns the Openprovider-managed authoritative NS records.
