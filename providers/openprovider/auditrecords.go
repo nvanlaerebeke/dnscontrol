@@ -25,18 +25,18 @@ var supportedCAATags = []string{"issue", "issuewild", "iodef"}
 
 // AuditRecords returns errors for records that Openprovider cannot represent.
 func AuditRecords(records models.Records) []error {
-	auditor := rejectif.Auditor{}
-	auditor.TypesSupported(supportedRecordTypes)
-	auditor.Add("NS", rejectUnsupportedNS)          // Last verified 2026-09-21
-	auditor.Add("MX", rejectif.MxNull)              // Last verified 2026-09-21
-	auditor.Add("SRV", rejectif.SrvHasNullTarget)   // Last verified 2026-09-21
-	auditor.Add("TXT", rejectif.TxtIsEmpty)         // Last verified 2026-09-21
-	auditor.Add("TXT", rejectif.TxtHasDoubleQuotes) // Last verified 2026-09-21
-	auditor.Add("TXT", rejectif.TxtHasBackslash)    // Last verified 2026-09-21
-	auditor.Add("CAA", rejectUnsupportedCAAFlag)    // Last verified 2026-09-21
-	auditor.Add("CAA", rejectUnsupportedCAATag)     // Last verified 2026-09-21
-	auditor.Add("CAA", rejectUnsupportedCAAFields)  // Last verified 2026-09-21
-	return auditor.Audit(records)
+	a := rejectif.Auditor{}
+	a.TypesSupported(supportedRecordTypes)
+	a.Add("NS", rejectUnsupportedNS)          // Last verified 2026-09-21
+	a.Add("MX", rejectif.MxNull)              // Last verified 2026-09-21
+	a.Add("SRV", rejectif.SrvHasNullTarget)   // Last verified 2026-09-21
+	a.Add("TXT", rejectif.TxtIsEmpty)         // Last verified 2026-09-21
+	a.Add("TXT", rejectif.TxtHasDoubleQuotes) // Last verified 2026-09-21
+	a.Add("TXT", rejectif.TxtHasBackslash)    // Last verified 2026-09-21
+	a.Add("CAA", rejectUnsupportedCAAFlag)    // Last verified 2026-09-21
+	a.Add("CAA", rejectUnsupportedCAATag)     // Last verified 2026-09-21
+	a.Add("CAA", rejectUnsupportedCAAFields)  // Last verified 2026-09-21
+	return a.Audit(records)
 }
 
 func rejectUnsupportedNS(rc *models.RecordConfig) error {
