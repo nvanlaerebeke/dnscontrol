@@ -29,11 +29,7 @@ func toRecordConfig(record apiRecord, dc *models.DomainConfig) (*models.RecordCo
 	case "TXT", "SPF":
 		// SPF (RR99) is a legacy API type. DNSControl represents it as TXT,
 		// which is also the form users can declare in dnsconfig.js.
-		var decoded string
-		decoded, err = txtutil.ParseQuoted(value)
-		if err == nil {
-			rc, err = dc.NewRecordConfig(label, uint32(record.TTL), dnsv2.TypeTXT, decoded)
-		}
+		rc, err = dc.NewRecordConfigParse(label, uint32(record.TTL), dnsv2.TypeTXT, value)
 	case "CNAME":
 		rc, err = dc.NewRecordConfig(label, uint32(record.TTL), dnsv2.TypeCNAME, absoluteTarget(value, origin))
 	default:
