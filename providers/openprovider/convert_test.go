@@ -43,7 +43,7 @@ func TestRecordRoundTrip(t *testing.T) {
 		},
 		{
 			name:         "MX priority",
-			stored:       apiRecord{Name: "example.com", Type: "MX", Value: "mail.example.net", Prio: 10, TTL: 600},
+			stored:       apiRecord{Name: "example.com.", Type: "MX", Value: "mail.example.net", Prio: 10, TTL: 600},
 			wantLabel:    "@",
 			wantValue:    "mail.example.net",
 			wantPriority: 10,
