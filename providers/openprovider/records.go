@@ -29,7 +29,7 @@ func (p *openproviderProvider) GetZoneRecords(dc *models.DomainConfig) (models.R
 		if apiRecord.Type == "SOA" || apiRecord.Type == "NS" {
 			continue
 		}
-		record, err := toRecordConfig(apiRecord, dc.Name)
+		record, err := toRecordConfig(apiRecord, dc)
 		if err != nil {
 			return nil, err
 		}

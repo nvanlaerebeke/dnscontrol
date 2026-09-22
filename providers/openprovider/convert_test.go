@@ -11,6 +11,7 @@ const testOrigin = "example.com"
 
 func TestRecordRoundTrip(t *testing.T) {
 	longTXT := strings.Repeat("x", 260)
+	dc := &models.DomainConfig{Name: testOrigin}
 	tests := []struct {
 		name         string
 		stored       apiRecord
@@ -95,7 +96,7 @@ func TestRecordRoundTrip(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rc, err := toRecordConfig(tt.stored, testOrigin)
+			rc, err := toRecordConfig(tt.stored, dc)
 			if err != nil {
 				t.Fatalf("toRecordConfig: %v", err)
 			}
@@ -134,7 +135,7 @@ func recordTarget(rc *models.RecordConfig) string {
 }
 
 func TestRelativeHostnameTarget(t *testing.T) {
-	rc, err := toRecordConfig(apiRecord{Name: "alias", Type: "CNAME", Value: "www", TTL: 600}, testOrigin)
+	rc, err := toRecordConfig(apiRecord{Name: "alias", Type: "CNAME", Value: "www", TTL: 600}, &models.DomainConfig{Name: testOrigin})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -144,7 +145,7 @@ func TestRelativeHostnameTarget(t *testing.T) {
 }
 
 func TestInvalidSRVValue(t *testing.T) {
-	_, err := toRecordConfig(apiRecord{Name: "_sip._tcp", Type: "SRV", Value: "missing fields", TTL: 600}, testOrigin)
+	_, err := toRecordConfig(apiRecord{Name: "_sip._tcp", Type: "SRV", Value: "missing fields", TTL: 600}, &models.DomainConfig{Name: testOrigin})
 	if err == nil || !strings.Contains(err.Error(), "invalid value") {
 		t.Fatalf("error = %v", err)
 	}

@@ -227,7 +227,7 @@ func TestMXPriorityZeroIsSerialized(t *testing.T) {
 
 func mustNativeRecord(t *testing.T, native apiRecord) *models.RecordConfig {
 	t.Helper()
-	record, err := toRecordConfig(native, testOrigin)
+	record, err := toRecordConfig(native, &models.DomainConfig{Name: testOrigin})
 	if err != nil {
 		t.Fatal(err)
 	}

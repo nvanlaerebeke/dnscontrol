@@ -11,9 +11,9 @@ import (
 
 const apexLabel = "@"
 
-func toRecordConfig(record apiRecord, origin string) (*models.RecordConfig, error) {
+func toRecordConfig(record apiRecord, dc *models.DomainConfig) (*models.RecordConfig, error) {
 	rtype := strings.ToUpper(record.Type)
-	dc := &models.DomainConfig{Name: origin}
+	origin := dc.Name
 	label := relativeRecordName(record.Name, origin)
 	if label == "" {
 		label = apexLabel
