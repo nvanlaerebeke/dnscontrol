@@ -15,10 +15,7 @@ const apexLabel = "@"
 func toRecordConfig(record apiRecord, dc *models.DomainConfig) (*models.RecordConfig, error) {
 	rtype := strings.ToUpper(record.Type)
 	origin := dc.Name
-	label := relativeRecordName(record.Name, origin)
-	if label == "" {
-		label = apexLabel
-	}
+	label := labelFromAPIRecordName(record.Name, dc)
 
 	value := record.Value
 	var rc *models.RecordConfig
@@ -47,6 +44,24 @@ func toRecordConfig(record apiRecord, dc *models.DomainConfig) (*models.RecordCo
 	}
 	rc.Original = record
 	return rc, nil
+}
+
+// labelFromAPIRecordName converts the owner-name formats returned by
+// Openprovider into a RecordConfig label using the DomainConfig helpers.
+func labelFromAPIRecordName(name string, dc *models.DomainConfig) string {
+	origin := strings.TrimSuffix(dc.Name, ".")
+	trimmed := strings.TrimSuffix(name, ".")
+
+	switch {
+	case name == "" || name == apexLabel:
+		return dc.LabelFromShort(name)
+	case strings.HasSuffix(name, "."):
+		return dc.LabelFromFQDNWithDot(name)
+	case strings.EqualFold(trimmed, origin) || strings.HasSuffix(strings.ToLower(trimmed), "."+strings.ToLower(origin)):
+		return dc.LabelFromFQDNNoDot(name)
+	default:
+		return dc.LabelFromShort(name)
+	}
 }
 
 func fromRecordConfig(rc *models.RecordConfig) apiRecord {
