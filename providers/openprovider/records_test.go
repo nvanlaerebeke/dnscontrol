@@ -290,9 +290,7 @@ func TestEnsureZoneExists(t *testing.T) {
 		t.Fatalf("existing zone was created again: %#v", created)
 	}
 
-	dc := &models.DomainConfig{Name: "new.example"}
-	record := dc.MustNewRecordConfig("www", 300, "A", "192.0.2.1")
-	if err := provider.EnsureZoneExists(&models.DomainConfig{Name: "new.example", Records: models.Records{record}}); err != nil {
+	if err := provider.EnsureZoneExists(&models.DomainConfig{Name: "new.example"}); err != nil {
 		t.Fatalf("new zone: %v", err)
 	}
 	if len(created) != 1 {
@@ -301,7 +299,7 @@ func TestEnsureZoneExists(t *testing.T) {
 	if created[0].Domain.Name != "new" || created[0].Domain.Extension != "example" || created[0].Type != "master" || created[0].IsSpamExpertsEnabled != "off" || created[0].Secured {
 		t.Errorf("create zone identity = %#v", created[0])
 	}
-	if len(created[0].Records) != 1 || created[0].Records[0].TTL != int(minimumTTL) {
+	if len(created[0].Records) != 0 {
 		t.Errorf("create zone records = %#v", created[0].Records)
 	}
 }
@@ -319,22 +317,5 @@ func TestSplitZoneName(t *testing.T) {
 		if got != want {
 			t.Errorf("splitZoneName(%q) = %#v, want %#v", input, got, want)
 		}
-	}
-}
-
-func TestEnsureZoneExistsRequiresInitialRecord(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/auth/login" {
-			writeJSON(t, w, http.StatusOK, `{"code":0,"data":{"token":"token"},"desc":""}`)
-			return
-		}
-		writeJSON(t, w, http.StatusNotFound, `{"code":872,"data":null,"desc":"Zone specified is not found."}`)
-	}))
-	defer server.Close()
-
-	provider := &openproviderProvider{client: testAPIClient(t, server.URL)}
-	err := provider.EnsureZoneExists(&models.DomainConfig{Name: "new.example"})
-	if err == nil {
-		t.Fatal("EnsureZoneExists returned no error")
 	}
 }
