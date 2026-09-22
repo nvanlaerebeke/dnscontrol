@@ -22,7 +22,7 @@ func toRecordConfig(record apiRecord, dc *models.DomainConfig) (*models.RecordCo
 	var err error
 	switch rtype {
 	case "MX":
-		rc, err = dc.NewRecordConfig(label, uint32(record.TTL), dnsv2.TypeMX, uint16(record.Prio), absoluteTarget(value, origin))
+		rc, err = dc.NewRecordConfig(dc.LabelFromFQDNWithDot(record.Name), uint32(record.TTL), dnsv2.TypeMX, uint16(record.Prio), value, nrc.Flags{TargetIsFqdnNoDot: true})
 	case "SRV":
 		rc, err = dc.NewRecordConfig(label, uint32(record.TTL), dnsv2.TypeSRV, uint16(record.Prio), value,
 			nrc.Flags{SrvWeirdSplit: true, TargetIsFqdnNoDot: true})
