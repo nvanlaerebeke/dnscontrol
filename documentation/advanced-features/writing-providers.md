@@ -153,8 +153,8 @@ The BIND and TransIP registrations in this repository are worked examples mainta
 - [`providers/bind/bindProvider.go`][bind-source]: the simple shape, plus a `PostWrite` hook that creates the zone files directory.
 - [`providers/transip/transipProvider.go`][transip-source]: an auth method selector (`Internal` plus `ShowIf`) that branches between a short lived access token and an account name paired with a PEM private key.
 
-[bind-source]: https://github.com/StackExchange/dnscontrol/blob/main/providers/bind/bindProvider.go
-[transip-source]: https://github.com/StackExchange/dnscontrol/blob/main/providers/transip/transipProvider.go
+[bind-source]: https://github.com/DNSControl/dnscontrol/blob/main/providers/bind/bindProvider.go
+[transip-source]: https://github.com/DNSControl/dnscontrol/blob/main/providers/transip/transipProvider.go
 
 Providers without registered metadata still work; users just create the
 `creds.json` entry manually, using the help of the provider's documentation page.
@@ -294,6 +294,30 @@ Capabilities are processed early by DNSControl.  For example if a provider doesn
 Enable optional capabilities in the `nameProvider.go` file and run the integration tests to see what works and what doesn't.  Fix any bugs and repeat, repeat, repeat until you have all the capabilities you want to implement.
 
 FYI: If a provider's capabilities changes, run `go generate` to update the documentation.
+
+### Record identity for providers with per-line records
+
+Some providers store the same name and type several times, splitting the answers by record line, region or routing policy. DNSPod lines, Huawei Cloud lines, Gcore GeoDNS and ClouDNS geodns work that way. Those records share a label, type and RDATA, so validation would report them as duplicates.
+
+Such a provider can declare `RecordIdentity` in its `DspFuncs`:
+
+{% code title="nameProvider.go" %}
+```go
+fns := providers.DspFuncs{
+    Initializer:    newNameDsp,
+    RecordAuditor:  AuditRecords,
+    RecordIdentity: recordIdentity,
+}
+```
+{% endcode %}
+
+`recordIdentity` takes one `models.RecordConfig` and returns the text that makes the record distinct, for example `"line_id=10=1"`. Validation appends that text to the key it uses for duplicate detection. A provider that does not declare it keeps the default rules.
+
+The function runs during validation, before the provider has read the zone, so it must depend only on the record it is given. Anything that needs the live zone belongs in the comparable function that the provider passes to `diff2.ByRecord`, not here. Turning a configured line name into a line ID is an example: only the zone knows the mapping.
+
+When a domain has several providers, the first one that declares an identity function is used. The exception applies to the whole domain, so a second provider on the same domain inherits it; two providers that both store per-line records should declare the same rule.
+
+`dnscontrol check` does not read `creds.json`, so a provider declared as `NewDnsProvider("name")` has no type at that point and its identity function does not run. Use the two-argument form when `check` should see it.
 
 ## Step 13: Automated code tests
 
